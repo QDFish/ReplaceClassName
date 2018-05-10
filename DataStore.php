@@ -1,4 +1,5 @@
 <?php
+//脚本生成的替换类名，只保留上一次脚本的结果
 $className = [
 	'LiveSocketVC',
 	'SocketIOQANoticeMessage',
