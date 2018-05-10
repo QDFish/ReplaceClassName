@@ -7,7 +7,10 @@
  */
 
 
-
+//黑名单目录，添加自己屏蔽的类名，被屏蔽的类名不做重命名操作，但是仍然会作内容替换工作
+//黑名单类名会在脚本运行中增加，屏蔽掉以下条件的类名
+//1. UI跟NS开头的系统文件类名，比如NSString，则将String添加进入黑名单
+//2，所有的非NS跟非UI开头的Category类名，比如HBLabel+HB，则把HBLabel添加进入黑名单
 $blackList = [
     'ViewController',
     'View',
