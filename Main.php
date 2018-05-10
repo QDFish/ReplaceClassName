@@ -11,6 +11,8 @@ require_once "ReplaceNameObj.php";
 require_once "BlackList.php";
 require_once "DataStore.php";
 
+
+
 //类名替换前缀
 ReplaceNameObj::$prefix = 'ABC';
 ReplaceNameObj::$suffix = 'XZY';
@@ -21,6 +23,9 @@ $path = ['/Users/zgzheng/peipei/HBPeiPei', '/Users/zgzheng/peipei/HBCommon'];
 $projPath = '/Users/zgzheng/peipei/HBPeiPei.xcodeproj/project.pbxproj';
 //debug=1时走debug流程(用于快速排查错误,以及单元测试)
 $debug = 0;
+
+//--->只需要配置上面几项，自己必要的黑名单可以添加到blackList里面
+
 
 //添加黑名单(主要是没有实现文件的纯头文件引用以及NS,UI开头的Category文件)
 foreach ($path as $childPath) {
