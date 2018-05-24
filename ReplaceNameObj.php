@@ -11,11 +11,19 @@ require_once 'BlackList.php';
 
 class ReplaceNameObj
 {
+    //需要替换的文件目录
     private $paths;
+    
+    //需要替换工程目录
     private $projectPath;
+    
+    //需要替换的类名称
     private $classNames = array();
+    
+    //需要替换内容的文件目录
     private $filePaths = array();
 
+   //前缀以及后缀
     public static $prefix;
     public static $suffix;
 
@@ -94,6 +102,7 @@ class ReplaceNameObj
         }
     }
     
+    //Debug跑该方法，通过本地存储的已经添加的需要替换的类名，以及需要单独测试的文件的目录
     public function  dealFilePathsWithClassNames($classNames, $filePaths) {
         $this->classNames = $classNames;
         $this->filePaths = $filePaths;
@@ -112,6 +121,7 @@ class ReplaceNameObj
         $this->dealPorContent($this->projectPath);
     }
 
+    //替换文件内容中被修改过的类名
     private function dealFileContent($path) {
 
         echo "正在替换{$path}文件内容" . PHP_EOL;
@@ -125,6 +135,7 @@ class ReplaceNameObj
         fclose($writeHandle);
     }
 
+    //替换工程文件中被修改的类名（由于工程只修改.h,.m文件，所以分开写以防文件名与目录名称相同出现误修改目录名称的错误）
     private function dealPorContent($path) {
         echo "正在替换{$path}文件内容" . PHP_EOL;
         $contents =  file_get_contents($path);
@@ -149,6 +160,7 @@ class ReplaceNameObj
         return false;
     }
 
+    //保存这一次脚本需要替换的类名，DEBUG用
     public function storeClassName() {
         $writeHandle = fopen(__DIR__ . DIRECTORY_SEPARATOR . 'DataStore.php', 'w+');
         fwrite($writeHandle, "<?php\n");
@@ -159,6 +171,7 @@ class ReplaceNameObj
         fwrite($writeHandle, "];\n");
     }
     
+    //精确替换类名，如RoomInfo以及ChatRoomInfo的例子中，修改RoomInfo不会影响到ChatRoomInfo
     public static  function replace($content, $repalce, $search) {
         $pos = 0;
         while(false !== ($pos = strpos($content, $search, $pos))) {
