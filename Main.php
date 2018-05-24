@@ -18,11 +18,12 @@ ReplaceNameObj::$prefix = 'ABC';
 ReplaceNameObj::$suffix = 'XZY';
 
 //需要替换的路径集合
-$path = ['/Project/ForManGit/ForMan/ForMan', '/Project/ForManGit/ForMan/FMTodayExtension', '/Project/ForManGit/ForMan/FMNotificationServiceExtension', '/Project/ForManGit/ForMan/FMNotificationContentExtension'];
+$path = ['/Users/zgzheng/TouchiOS_new/TaQu/Controller/Live/Cover'];
+$blackPath = ['/Users/zgzheng/TouchiOS_new/TaQu/Controller/Live/Cover/Focus'];
 //工程文件目录
-$projPath = '/Project/ForManGit/ForMan/ForMan.xcodeproj/project.pbxproj';
+$projPath = '/Users/zgzheng/TouchiOS_new/TaQu.xcodeproj/project.pbxproj';
 //debug=1时走debug流程(用于快速排查错误,以及单元测试)
-$debug = 1;
+$debug = 0;
 
 //--->只需要配置上面几项，自己必要的黑名单可以添加到blackList里面
 
@@ -31,6 +32,11 @@ $debug = 1;
 foreach ($path as $childPath) {
     searchAll($childPath);
 }
+
+foreach ($blackPath as $childPath) {
+    blackAll($childPath);
+}
+
 searchAll('/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Library/Frameworks/Foundation.framework/Headers');
 searchAll('/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Library/Frameworks/UIKit.framework/Headers');
 

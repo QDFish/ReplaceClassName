@@ -6,6 +6,7 @@
  * Time: 下午12:01
  */
 
+require_once "ReplaceNameObj.php";
 
 //黑名单目录，添加自己屏蔽的类名，被屏蔽的类名不做重命名操作，但是仍然会作内容替换工作
 //黑名单类名会在脚本运行中增加，屏蔽掉以下条件的类名
@@ -16,6 +17,7 @@ $blackList = [
     'View',
     'main',
     'Label',
+    'Model',
     'TextField',
     'TextView',
     'ImageView',
@@ -38,10 +40,7 @@ $blackList = [
     'FMSepertorLineView'
 ];
 
-
-
-
-function searchAll($path) {
+function blackAll($path) {
     global $blackList;
     $dirHandle = opendir($path);
     while (false !== ($fileName = readdir($dirHandle))) {
@@ -49,6 +48,29 @@ function searchAll($path) {
 
         $absolutePath = $path . DIRECTORY_SEPARATOR . $fileName;
         if (is_dir($absolutePath)) {
+            blackAll($absolutePath);
+            continue;
+        }
+
+        if (preg_match("/^\w+\.[mh]$/", $fileName)) {
+            $blackName = substr($fileName, 0, strlen($fileName) - 2);
+            $blackList[] = $blackName;
+        }
+    }
+}
+
+
+function searchAll($path) {
+    global $blackList;
+    $prefix = ReplaceNameObj::$prefix;
+    $suffix = ReplaceNameObj::$suffix;
+    $dirHandle = opendir($path);
+    while (false !== ($fileName = readdir($dirHandle))) {
+        if ($fileName === '.' || $fileName === '..') continue;
+
+        $absolutePath = $path . DIRECTORY_SEPARATOR . $fileName;
+        if (is_dir($absolutePath)) {
+            $blackList[] = $fileName;
             searchAll($absolutePath);
             continue;
         }
@@ -63,6 +85,10 @@ function searchAll($path) {
 
         } else if (preg_match("/\w+\.xib$/", $fileName)) {
             $blackName = substr($fileName, 0, strlen($fileName) -4);
+            $blackList[] = $blackName;
+
+        } else if (preg_match("/^($prefix)\w+($suffix)\.[mh]$/", $fileName)) {
+            $blackName = substr($fileName, 0, strlen($fileName) - 2);
             $blackList[] = $blackName;
         }
     }
