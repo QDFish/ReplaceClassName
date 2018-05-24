@@ -16,11 +16,11 @@ ReplaceNameObj::$prefix = 'ABC';
 ReplaceNameObj::$suffix = 'XZY';
 
 //需要替换的路径集合
-$path = ['/Users/zgzheng/peipei/HBPeiPei', '/Users/zgzheng/peipei/HBCommon'];
+$path = ['/Project/ForManGit/ForMan/ForMan', '/Project/ForManGit/ForMan/FMTodayExtension', '/Project/ForManGit/ForMan/FMNotificationServiceExtension', '/Project/ForManGit/ForMan/FMNotificationContentExtension'];
 //工程文件目录
-$projPath = '/Users/zgzheng/peipei/HBPeiPei.xcodeproj/project.pbxproj';
+$projPath = '/Project/ForManGit/ForMan/ForMan.xcodeproj/project.pbxproj';
 //debug=1时走debug流程(用于快速排查错误,以及单元测试)
-$debug = 0;
+$debug = 1;
 
 //添加黑名单(主要是没有实现文件的纯头文件引用以及NS,UI开头的Category文件)
 foreach ($path as $childPath) {
@@ -35,7 +35,7 @@ $obj = new ReplaceNameObj($path, $projPath);
 if ($debug === 1) {
     
     $debugPaths = [
-        '/Users/zgzheng/peipei/HBPeiPei/HBLive/Classes/Cover/Focus/View/ABCLiveHallFollowListNotStarCellXZY.h'
+        '/Project/ForManGit/ForMan/ForMan/AppDelegate.mm'
     ];
     $obj->dealFilePathsWithClassNames($debugClassName , $debugPaths);
     

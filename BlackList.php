@@ -23,7 +23,16 @@ $blackList = [
     'HBHomeDefine',
     'HBLiveDefine',
     'LiveFrogDefine',
-    'SVProgressHUD'
+    'SVProgressHUD',
+    'FMGlobalConfigModel',
+    'UITableViewRowAction',
+    'FMMessageBadgeView',
+    'SYFavoriteButton',
+    'FMAttentionRedPointView',
+    'FMRightImageButton',
+    'FMMediaView',
+    'FMVerticalSpeLineView',
+    'FMSepertorLineView'
 ];
 
 
@@ -42,13 +51,16 @@ function searchAll($path) {
         }
 
         //UIKit Foundation
-        if (strpos($fileName, '.h') !== false && (strpos($fileName, 'NS') !== false || strpos($fileName, 'UI') !== false)) {
+        if ((strpos($fileName, '.h') !== false || strpos($fileName, '.m') !== false) && (strpos($fileName, 'NS') !== false || strpos($fileName, 'UI') !== false)) {
             $blackName = substr($fileName, 2, strlen($fileName) - 4);
             $blackList[] = $blackName;
         } else if (!preg_match("/^(NS|UI)\w+/", $fileName) && preg_match("/^\w+\+\w+\.m$/", $fileName)) {
             $strs = explode('+', $fileName);
             $blackList[] = $strs[0];
 
+        } else if (preg_match("/\w+\.xib$/", $fileName)) {
+            $blackName = substr($fileName, 0, strlen($fileName) -4);
+            $blackList[] = $blackName;
         }
     }
 }
