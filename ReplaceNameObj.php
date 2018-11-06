@@ -23,15 +23,28 @@ class ReplaceNameObj
     //需要替换内容的文件目录
     private $filePaths = array();
 
+    //白名单,直接替换的目录
+    private $whitePaths = array();
+
    //前缀以及后缀
     public static $prefix;
     public static $suffix;
 
-    public function __construct(array $paths, $projectPath)
+    public function __construct(array $paths, $projectPath, array $whitePaths)
     {
         $this->paths = $paths;
         $this->projectPath = $projectPath;
-        
+        $this->whitePaths = $whitePaths;
+    }
+
+    public function dealClassNameForWhitePath() {
+        foreach ($this->whitePaths as $path) {
+            self::recursivePathForClassName($path);
+        }
+
+        foreach ($this->paths as $path) {
+            self::recursivePathOnlySearch($path);
+        }
     }
 
     public function dealClassNameFromPath() {
@@ -40,7 +53,7 @@ class ReplaceNameObj
         }
     }
 
-    private function recursivePathForClassName($path) {
+    private function recursivePathOnlySearch($path) {
 
         $dirHandle = opendir($path);
         echo '处理目录' . $path . PHP_EOL;
@@ -49,34 +62,13 @@ class ReplaceNameObj
 
             $absoluteFilePath = $path . DIRECTORY_SEPARATOR . $fileName;
             if (is_dir($absoluteFilePath)) {
-                self::recursivePathForClassName($absoluteFilePath);
-                continue;
-            }
-
-            //不处理已经更改的文件(有些目录会导致二次打开相同的文件)
-            if (strpos($fileName, self::$prefix) !== false && strpos($fileName, self::$suffix) !==false) {
+                self::recursivePathOnlySearch($absoluteFilePath);
                 continue;
             }
 
             //.m文件(非Category文件),同时处理同名的.h文件
             if (preg_match("/^\w+\.m$/", $fileName)) {
-
                 $realFileName = substr($fileName, 0, strlen($fileName) - 2);
-                $fileName = substr($fileName, 0, strlen($fileName) - 2);
-
-                if (!$this->isBlackClass($realFileName)) {
-
-                    $this->classNames[] = $realFileName;
-                    $realFileName = self::$prefix . $realFileName . self::$suffix;
-                    rename($path . DIRECTORY_SEPARATOR . $fileName . '.m', $path . DIRECTORY_SEPARATOR . $realFileName . '.m');
-
-                    if (file_exists($path . DIRECTORY_SEPARATOR . $fileName . '.h')) {
-                        rename($path . DIRECTORY_SEPARATOR . $fileName . '.h', $path . DIRECTORY_SEPARATOR . $realFileName . '.h');
-
-                    }
-
-                    echo "重命名{$fileName}为{$realFileName}" . PHP_EOL;
-                }
 
                 $this->filePaths[] = $path . DIRECTORY_SEPARATOR . $realFileName . '.m';
                 if (file_exists($path . DIRECTORY_SEPARATOR . $realFileName . '.h')) {
@@ -100,6 +92,81 @@ class ReplaceNameObj
             }
 
         }
+        closedir($dirHandle);
+    }
+
+
+    private function recursivePathForClassName($path) {
+
+        $dirHandle = opendir($path);
+        echo '处理目录' . $path . PHP_EOL;
+        while (false !== ($fileName = readdir($dirHandle))) {
+            if ($fileName === '.' || $fileName === '..') continue;
+
+            $absoluteFilePath = $path . DIRECTORY_SEPARATOR . $fileName;
+            if (is_dir($absoluteFilePath)) {
+                self::recursivePathForClassName($absoluteFilePath);
+                continue;
+            }
+
+
+            //不处理已经更改的文件
+            if (strpos($fileName, self::$prefix) !== false && strpos($fileName, self::$suffix) !==false) {
+                continue;
+            }
+
+            //.m文件(非Category文件),同时处理同名的.h文件
+            if (preg_match("/^(HB)\w+\.m$/", $fileName)) {
+
+                $realFileName = substr($fileName, 0, strlen($fileName) - 2);
+                $fileName = substr($fileName, 0, strlen($fileName) - 2);
+
+                if (!$this->isBlackClass($realFileName)) {
+
+                    $this->classNames[] = $realFileName;
+                    $realFileName = self::$prefix . $realFileName . self::$suffix;
+                    rename($path . DIRECTORY_SEPARATOR . $fileName . '.m', $path . DIRECTORY_SEPARATOR . $realFileName . '.m');
+
+                    if (file_exists($path . DIRECTORY_SEPARATOR . $fileName . '.h')) {
+                        rename($path . DIRECTORY_SEPARATOR . $fileName . '.h', $path . DIRECTORY_SEPARATOR . $realFileName . '.h');
+                    }
+
+                    echo "重命名{$fileName}为{$realFileName}" . PHP_EOL;
+                }
+
+                $this->filePaths[] = $path . DIRECTORY_SEPARATOR . $realFileName . '.m';
+                if (file_exists($path . DIRECTORY_SEPARATOR . $realFileName . '.h')) {
+                    $this->filePaths[] = $path . DIRECTORY_SEPARATOR . $realFileName . '.h';
+                }
+
+                continue;
+            }
+
+            //由于上面排除掉前坠有HB的文件,这边要补充
+            if (preg_match("/^\w+\.m$/", $fileName)) {
+                $realFileName = substr($fileName, 0, strlen($fileName) - 2);
+                $this->filePaths[] = $path . DIRECTORY_SEPARATOR . $realFileName . '.m';
+                if (file_exists($path . DIRECTORY_SEPARATOR . $realFileName . '.h')) {
+                    $this->filePaths[] = $path . DIRECTORY_SEPARATOR . $realFileName . '.h';
+                }
+
+                continue;
+            }
+
+
+            //处理只有.h的文件,不重命名,只加入修改内容目录
+            $realName = substr($fileName, 0, strlen($fileName) - 2);
+            if (preg_match("/^\w+\.h$/", $fileName) && !file_exists($path . DIRECTORY_SEPARATOR . $realName . '.m') && !file_exists($path . DIRECTORY_SEPARATOR . self::$prefix . $realName . self::$suffix . '.m')) {
+                $this->filePaths[] = $path . DIRECTORY_SEPARATOR . $fileName;
+                continue;
+            }
+
+            //Category文件加入处理内容目录
+            if (preg_match("/^\w+\+\w+\.[hm]$/", $fileName)) {
+                $this->filePaths[] = $path . DIRECTORY_SEPARATOR . $fileName;
+            }
+        }
+        closedir($dirHandle);
     }
     
     //Debug跑该方法，通过本地存储的已经添加的需要替换的类名，以及需要单独测试的文件的目录
@@ -119,6 +186,18 @@ class ReplaceNameObj
 
     public function dealProjectPathForClassName() {
         $this->dealPorContent($this->projectPath);
+    }
+
+    public function renameDir() {
+        global $classDirList;
+        foreach ($classDirList as $path) {
+            $totalPaths = explode(DIRECTORY_SEPARATOR, $path);
+            $fileName = array_pop($totalPaths);
+            $fileName = self::$prefix . $fileName . self::$suffix;
+            array_push($totalPaths, $fileName);
+            $newPath = implode($fileName);
+            rename($path, $newPath);
+        }
     }
 
     //替换文件内容中被修改过的类名
@@ -169,6 +248,19 @@ class ReplaceNameObj
             fwrite($writeHandle, "\t'$className',\n");
         }
         fwrite($writeHandle, "];\n");
+        fclose($writeHandle);
+    }
+
+    public function storeBlackName() {
+        $writeHandle = fopen(__DIR__ . DIRECTORY_SEPARATOR . 'BlackDataStore.php', 'w+');
+        fwrite($writeHandle, "<?php\n");
+        fwrite($writeHandle, "\$blackListNames = [\n");
+        global $blackList;
+        foreach ($blackList as $className) {
+            fwrite($writeHandle, "\t'$className',\n");
+        }
+        fwrite($writeHandle, "];\n");
+        fclose($writeHandle);
     }
     
     //精确替换类名，如RoomInfo以及ChatRoomInfo的例子中，修改RoomInfo不会影响到ChatRoomInfo
